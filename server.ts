@@ -3,11 +3,19 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import { config } from 'dotenv';
+import cors from "cors";
 
 config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+
+// ✅ CORS: izinkan request dari Capacitor/mobile
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"],
+}));
 
 app.use(express.json());
 
@@ -37,7 +45,6 @@ app.post("/api/gemini/buddy", async (req, res) => {
     const { message, chatHistory } = req.body;
     const ai = getGeminiClient();
 
-    // Prepare a cozy system instruction suited for a child-friendly companion
     const systemInstruction = 
       "Kamu adalah Zain, seorang anak laki-laki berusia 8 tahun yang sangat cerdas, ceria, ramah, dan sholeh. " +
       "Tugasmu adalah menjadi teman belajar mengaji, membaca Al-Quran, dan Tajwid bagi anak-anak Indonesia. " +
@@ -47,7 +54,6 @@ app.post("/api/gemini/buddy", async (req, res) => {
       "Jika ditanya tentang kisah nabi, surah, atau tajwid, terangkan secara ringkas, menyenangkan, dan berikan pesan moral yang bagus. " +
       "Selalu gunakan kata 'Teman-teman' atau panggil dia 'Sobat Cilik'.";
 
-    // Format previous history into system/user contents for generateContent
     const contents: any[] = [];
     if (chatHistory && Array.isArray(chatHistory)) {
       chatHistory.forEach((c: any) => {
@@ -60,7 +66,7 @@ app.post("/api/gemini/buddy", async (req, res) => {
     contents.push({ role: "user", parts: [{ text: message }] });
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-1.5-flash", // ✅ FIXED: model yang valid
       contents: contents,
       config: {
         systemInstruction,
@@ -71,7 +77,6 @@ app.post("/api/gemini/buddy", async (req, res) => {
     res.json({ success: true, text: response.text });
   } catch (error: any) {
     console.error("Zain Buddy Error:", error.message);
-    // Fallback response for kids when API key is missing or errored
     const fallbackAnswers = [
       "Wah, sobat cilik cerdas sekali! Aku sangat senang mendengarnya. Ayo kita terus membaca Al-Quran ya! ✨",
       "Maa Shaa Allah! Bagus sekali pertanyaannya. Rasulullah dulu mengajarkan kita untuk selalu melafalkan huruf dengan baik dan benar. Terus semangat belajar tajwidnya ya! 📖🌟",
@@ -100,7 +105,7 @@ app.post("/api/gemini/explain-surah", async (req, res) => {
       "Akhiri dengan 1 baris hikmah/moral yang bisa anak-anak praktikkan sehari-hari. Maksimal 3 paragraf pendek.";
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-1.5-flash", // ✅ FIXED
       contents: `Gambarkan cerita di balik ${surahName} untuk anak kecil agar seru dan berkesan.`,
       config: {
         systemInstruction,
@@ -111,14 +116,13 @@ app.post("/api/gemini/explain-surah", async (req, res) => {
     res.json({ success: true, explanation: response.text });
   } catch (error: any) {
     console.error("Explain Surah Error:", error.message);
-    // Fallback explanations for children
     let fallback = "";
     if (req.body.surahName?.toLowerCase().includes("fil")) {
       fallback = "Dahulu kala, ada Raja sombong bernama Abrahah yang ingin merusak Ka'bah dengan menunggangi gajah-gajah yang sangat besar! Namun, Allah mengutus burung-burung kecil bernama Ababil. Burung-burung itu membawa batu-batu kerikil kecil yang sangat panas dari surga dan menjatuhkannya ke arah gajah-gajah jahat itu. Pasukan gajah pun lari ketakutan! Kisah seru ini diceritakan di Surah Al-Fil. Hikmahnya, kita tidak boleh sombong ya, karena Allah selalu melindungi orang-orang yang beriman! 🐘🐦🌟";
     } else if (req.body.surahName?.toLowerCase().includes("asr")) {
       fallback = "Surah Al-Asr menceritakan tentang betapa berharganya waktu! Waktu itu seperti es batu, kalau kita diamkan terus tanpa dimanfaatkan untuk hal baik, ia akan mencair begitu saja sampai habis. Orang-orang akan rugi jika tidak mengisi waktunya dengan beramal sholeh, saling menasihati dalam kebaikan, dan sabar. Hikmahnya, yuk kurangi waktu bermain game yang tidak bermanfaat, dan isi dengan belajar atau membantu Ayah & Ibu! ⏰✨";
     } else {
-      fallback = `Maa Shaa Allah! Surah ${req.body.surahName || "Surah Al-Quran"} memiliki makna dan hikmah yang sangat indah untuk membimbing kita menjadi anak yang ber akhlak mulia. Allah menurunkan surah ini agar kita selalu ingat untuk berbuat baik, gemar membantu sesama, dan taat beribadah. Hikmahnya, mari kita rajin melafalkannya setiap hari ya! 📖🕌❤️`;
+      fallback = `Maa Shaa Allah! Surah ${req.body.surahName || "Surah Al-Quran"} memiliki makna dan hikmah yang sangat indah untuk membimbing kita menjadi anak yang berakhlak mulia. Allah menurunkan surah ini agar kita selalu ingat untuk berbuat baik, gemar membantu sesama, dan taat beribadah. Hikmahnya, mari kita rajin melafalkannya setiap hari ya! 📖🕌❤️`;
     }
     res.json({ success: false, explanation: fallback, isFallback: true });
   }
@@ -127,7 +131,7 @@ app.post("/api/gemini/explain-surah", async (req, res) => {
 // AI endpoint 3: Kids Dynamic Quiz Generator (Kuis Pintar Cilik)
 app.post("/api/gemini/quiz", async (req, res) => {
   try {
-    const { category } = req.body; // e.g., 'surah', 'tajwid', 'hafalan'
+    const { category } = req.body;
     const ai = getGeminiClient();
 
     const prompt = 
@@ -136,7 +140,7 @@ app.post("/api/gemini/quiz", async (req, res) => {
       `Sediakan 3 pilihan jawaban untuk setiap pertanyaan.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-1.5-flash", // ✅ FIXED
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -165,7 +169,6 @@ app.post("/api/gemini/quiz", async (req, res) => {
     res.json({ success: true, quiz: quizData });
   } catch (error: any) {
     console.error("Quiz Generator Error:", error.message);
-    // Offline pre-programmed quiz dataset for kids fallback! Allows flawless offline functionality.
     const offlineQuizzes: Record<string, any[]> = {
       tajwid: [
         {
@@ -250,7 +253,7 @@ app.post("/api/gemini/read-verify", async (req, res) => {
     const prompt = `Ayat target: "${verseText}" (Artinya: "${translation}"). Upaya pembacaan: "${textAttempt || 'Anak baru saja membaca dengan lantang'}".`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-1.5-flash", // ✅ FIXED
       contents: prompt,
       config: {
         systemInstruction,
@@ -269,7 +272,7 @@ app.post("/api/gemini/read-verify", async (req, res) => {
   }
 });
 
-// Express serving configuration (Vite development mode + Static Production Build)
+// Express serving configuration
 const isProduction = process.env.NODE_ENV === "production";
 
 async function bootServer() {
