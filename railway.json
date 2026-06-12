@@ -5,5 +5,8 @@
   },
   "deploy": {
     "startCommand": "node dist/server.cjs"
+  },
+  "nixpacks": {
+    "nodejs": "22"
   }
 }
