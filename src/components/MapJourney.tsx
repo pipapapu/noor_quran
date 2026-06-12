@@ -175,7 +175,7 @@ export default function MapJourney({
     setChatLoading(true);
 
     try {
-      const res = await fetch("/api/gemini/buddy", {
+      const res = await fetch("https://noorquran-production.up.railway.app/api/gemini/buddy", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ 
