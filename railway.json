@@ -1,9 +1,9 @@
 {
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm install && node_modules/.bin/esbuild server.ts --bundle --platform=node --format=cjs --outfile=dist/server.cjs"
+    "buildCommand": "npm install && node_modules/.bin/esbuild server.ts --bundle --platform=node --format=cjs --packages=external --outfile=dist/server.cjs"
   },
   "deploy": {
-    "startCommand": "node dist/server.cjs"
+    "startCommand": "npm install && node dist/server.cjs"
   }
 }
