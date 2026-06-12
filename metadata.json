@@ -1,0 +1,6 @@
+{
+  "name": "Noor Al-Quran: Penjelajah Cilik",
+  "description": "A gamified, interactive Islamic learning application for kids to learn Quran, Tajwid, and Memorization with a journey map, cute rewards, and an AI Quran buddy.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
