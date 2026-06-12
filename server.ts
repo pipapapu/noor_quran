@@ -66,7 +66,7 @@ app.post("/api/gemini/buddy", async (req, res) => {
     contents.push({ role: "user", parts: [{ text: message }] });
 
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash", // ✅ FIXED: model yang valid
+      model: "gemini-2.5-flash", // ✅ FIXED: model yang valid
       contents: contents,
       config: {
         systemInstruction,
@@ -105,7 +105,7 @@ app.post("/api/gemini/explain-surah", async (req, res) => {
       "Akhiri dengan 1 baris hikmah/moral yang bisa anak-anak praktikkan sehari-hari. Maksimal 3 paragraf pendek.";
 
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash", // ✅ FIXED
+      model: "gemini-2.5-flash", // ✅ FIXED
       contents: `Gambarkan cerita di balik ${surahName} untuk anak kecil agar seru dan berkesan.`,
       config: {
         systemInstruction,
@@ -140,7 +140,7 @@ app.post("/api/gemini/quiz", async (req, res) => {
       `Sediakan 3 pilihan jawaban untuk setiap pertanyaan.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash", // ✅ FIXED
+      model: "gemini-2.5-flash", // ✅ FIXED
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -253,7 +253,7 @@ app.post("/api/gemini/read-verify", async (req, res) => {
     const prompt = `Ayat target: "${verseText}" (Artinya: "${translation}"). Upaya pembacaan: "${textAttempt || 'Anak baru saja membaca dengan lantang'}".`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash", // ✅ FIXED
+      model: "gemini-2.5-flash", // ✅ FIXED
       contents: prompt,
       config: {
         systemInstruction,
