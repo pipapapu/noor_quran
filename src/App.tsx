@@ -10,6 +10,7 @@ import TajwidStars from "./components/TajwidStars";
 import HafizHero from "./components/HafizHero";
 import ReadingPractice from "./components/ReadingPractice";
 import ProfileView from "./components/ProfileView";
+import PelajaranMenu from "./components/PelajaranMenu";
 
 import { ActivePlayer, SURAH_DATA, BAD_LIST, Verse } from "./types";
 
@@ -181,11 +182,10 @@ export default function App() {
               )}
 
               {activeTab === "pelajaran" && (
-                <TajwidStars
+                <PelajaranMenu
                   onBack={() => handleTabChange("home")}
                   onAddCoins={handleAddCoins}
                   onAddXp={handleAddXp}
-                  onUnlockBadge={handleUnlockBadge}
                 />
               )}
 
