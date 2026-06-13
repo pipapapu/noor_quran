@@ -1,26 +1,57 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
-
-const model = genAI.getGenerativeModel({
-  model: "gemini-2.0-flash",
-  systemInstruction: `Kamu adalah Zain, teman ngaji AI yang ramah dan sabar 
-  untuk anak-anak belajar Al-Quran. Jawab dengan bahasa yang mudah dipahami 
-  anak-anak, singkat, dan menyenangkan. Fokus pada topik Al-Quran, tajwid, 
-  dan hafalan.`,
-});
+// ✅ Ganti URL ini dengan domain Railway kamu
+const BASE_URL = import.meta.env.VITE_API_URL || "https://noorquran-production.up.railway.app";
 
 export async function chatWithZain(
   userMessage: string,
-  history: { role: "user" | "model"; parts: string }[] = []
-) {
-  const chat = model.startChat({
-    history: history.map((h) => ({
-      role: h.role,
-      parts: [{ text: h.parts }],
-    })),
+  chatHistory: { role: "user" | "model"; text: string }[] = []
+): Promise<string> {
+  const response = await fetch(`${BASE_URL}/api/gemini/buddy`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: userMessage, chatHistory }),
   });
 
-  const result = await chat.sendMessage(userMessage);
-  return result.response.text();
+  if (!response.ok) {
+    throw new Error(`Request gagal: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.text;
+}
+
+export async function explainSurah(surahName: string): Promise<string> {
+  const response = await fetch(`${BASE_URL}/api/gemini/explain-surah`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ surahName }),
+  });
+
+  const data = await response.json();
+  return data.explanation;
+}
+
+export async function generateQuiz(category: string = "default"): Promise<any[]> {
+  const response = await fetch(`${BASE_URL}/api/gemini/quiz`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ category }),
+  });
+
+  const data = await response.json();
+  return data.quiz;
+}
+
+export async function verifyReading(
+  verseText: string,
+  translation: string,
+  textAttempt?: string
+): Promise<string> {
+  const response = await fetch(`${BASE_URL}/api/gemini/read-verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ verseText, translation, textAttempt }),
+  });
+
+  const data = await response.json();
+  return data.evaluation;
 }

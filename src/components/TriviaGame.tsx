@@ -13,7 +13,7 @@ import {
   getCompletedLevels,
   markLevelCompleted,
   unlockNextLevel,
-} from "../services/quizStorage";
+} from "./services/quizStorage";
 
 // ============================================
 // Sound helpers (copy dari file lo biar konsisten)
