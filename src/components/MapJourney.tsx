@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, ChevronRight, Play } from "lucide-react";
 import { ActivePlayer, AVATARS } from "../types";
+import TriviaGame from "../components/TriviaGame";
 
 type TabId = "home" | "membaca" | "pelajaran" | "permainan" | "profil";
 
@@ -123,8 +124,7 @@ export default function MapJourney({
   onAddCoins,
   onAddXp,
 }: MapJourneyProps) {
-  const [activeCheckPoint, setActiveCheckPoint] = useState<number | null>(null);
-  const [checkingAnswer, setCheckingAnswer] = useState<number | null>(null);
+  const [triviaOpen, setTriviaOpen] = useState(false);
 
   // ✅ Chat box state (di dalam component)
   const key = undefined
@@ -139,23 +139,6 @@ export default function MapJourney({
   const avatarBgColor = AVATAR_BG_COLORS[player.name.charCodeAt(0) % AVATAR_BG_COLORS.length];
   const xpPct = getXpProgress(player.xp);
 
-  const handleTapCheckPoint = (cpId: number) => {
-    playSparkleSound();
-    setActiveCheckPoint(cpId);
-    setCheckingAnswer(null);
-  };
-
-  const handleAnswerCheckPoint = (index: number) => {
-    const cp = CHECKPOINTS.find(c => c.id === activeCheckPoint);
-    if (!cp) return;
-    if (index === cp.ansIdx) {
-      setCheckingAnswer(1); // correct
-      onAddCoins(10);
-      onAddXp(15);
-      setTimeout(() => setActiveCheckPoint(null), 1500);
-    } else {
-      setCheckingAnswer(2); // incorrect
-    }
   };
 
   // ✅ State tambahan buat loading & error
@@ -354,7 +337,7 @@ export default function MapJourney({
             id="btn-journey-trivia"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => handleTapCheckPoint(1)}
+            onClick={() => setTriviaOpen(true)}
             className="w-[75%] ml-auto bg-white border-[3px] border-cyan-400 rounded-2xl p-4 shadow-sm text-center transform transition active:scale-95 block relative"
           >
             <span className="absolute -top-2 -right-2 bg-cyan-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full animate-pulse">4 TRIVIA</span>
@@ -388,77 +371,16 @@ export default function MapJourney({
       </div>
 
       {/* ============ TRIVIA MODAL ============ */}
-      <AnimatePresence>
-        {activeCheckPoint !== null && (
-          <div className="absolute inset-0 bg-black/45 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-[32px] border-4 border-cyan-400 shadow-2xl p-5 w-full max-w-sm text-center relative font-sans space-y-4"
-            >
-              <button
-                id="close-trivia-btn"
-                onClick={() => setActiveCheckPoint(null)}
-                className="absolute right-4 top-4 p-1 rounded-full text-slate-400 hover:bg-slate-100 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="text-3xl mt-2 animate-bounce">💎📖✨</div>
-
-              <h4 className="font-extrabold text-[#00838F] text-xs uppercase tracking-widest leading-none">
-                Tantangan Titik Cek {activeCheckPoint}
-              </h4>
-
-              <p className="text-[11.5px] font-bold text-slate-800 leading-relaxed max-w-xs mx-auto">
-                {CHECKPOINTS[activeCheckPoint - 1]?.question}
-              </p>
-
-              {checkingAnswer === null ? (
-                <div className="space-y-2 pt-1 select-none">
-                  {CHECKPOINTS[activeCheckPoint - 1]?.options.map((opt, i) => (
-                    <button
-                      key={i}
-                      id={`cp-opt-${i}`}
-                      onClick={() => handleAnswerCheckPoint(i)}
-                      className="w-full p-3 text-center text-xs font-bold bg-slate-50 hover:bg-cyan-50 border-2 border-slate-200 hover:border-cyan-200 rounded-2xl transition active:scale-95 text-slate-700"
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              ) : checkingAnswer === 1 ? (
-                <motion.div
-                  initial={{ scale: 0.9 }}
-                  animate={{ scale: 1 }}
-                  className="bg-emerald-100/80 border border-emerald-200 text-emerald-900 rounded-3xl p-4 text-center space-y-1.5"
-                >
-                  <h4 className="font-extrabold text-sm">🎉 BENAR! HEBAT SEKALI!</h4>
-                  <p className="text-[10px] text-emerald-800 font-semibold leading-normal">
-                    Kamu mendapat <strong className="text-amber-600 font-bold">+10 Koin Emas</strong> &amp; <strong className="text-amber-500 font-extrabold">+15 XP</strong>!
-                  </p>
-                </motion.div>
-              ) : (
-                <div className="bg-red-50 border border-red-200 rounded-3xl p-4 space-y-2">
-                  <p className="text-xs text-red-700 font-bold">🥺 Oh-oh, jawaban belum tepat!</p>
-                  <button
-                    id="cp-retry-direct"
-                    onClick={() => setCheckingAnswer(null)}
-                    className="bg-red-500 hover:bg-red-600 text-white font-bold px-5 py-1.5 rounded-full text-[10.5px] shadow-sm transition active:scale-95"
-                  >
-                    Coba Lagi! 🔄
-                  </button>
-                </div>
-              )}
-
-              <p className="text-[8px] text-slate-400 font-semibold uppercase tracking-widest pt-1">
-                Kuis rahasia Titik Cek Noor Al-Quran
-              </p>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <{triviaOpen && (
+  <TriviaGame
+    initialLevel={1}
+    onClose={() => setTriviaOpen(false)}
+    onLevelComplete={(level, correctCount) => {
+      onAddCoins(10 * Math.max(1, correctCount));
+      onAddXp(15 * Math.max(1, correctCount));
+    }}
+  />
+)}
 
       {/* ============ ZAIN CHAT MODAL ============ */}
       <AnimatePresence>
